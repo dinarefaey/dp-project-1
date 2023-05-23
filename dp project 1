@@ -1,0 +1,204 @@
+import math
+from prettytable import PrettyTable
+import numpy as np
+from numpy import random
+
+
+def get_int_or_inf(s):
+    if s == 'inf':
+        return np.inf
+    else:
+        return int(s)
+
+
+def mmc(lamda, mu, c, n):
+    rho = lamda / (mu * c)
+    if rho >= 1:
+        return {'p0': -1, 'Lq': -1, 'L': -1, 'Wq': -1, 'W': -1, 'pk': -1}
+    p0 = 1 / ((sum(1 / math.factorial(n) * ((lamda / mu) ** n) for n in range(c - 1))) + (
+            1 / math.factorial(c) * ((lamda / mu) ** c) * (c * mu / (c * mu - lamda))))
+    if n <= c:
+        try:
+            pk = (((lamda / mu) ** c) / (math.factorial(c))) * p0
+        except OverflowError:
+            pk = math.inf
+    else:
+        try:
+            pk = (((lamda / mu) ** c) / (math.factorial(c))) * p0
+        except OverflowError:
+            pk = math.inf
+    lq = (((lamda / mu) ** c) * (lamda * mu) / math.factorial(c - 1) * ((c * mu - lamda) ** 2)) * p0
+    wq = lq
+    l = lq + (lamda / mu)
+    w = lq + 1 / mu
+    return {'p0': p0, 'Lq': lq, 'L': l, 'Wq': wq, 'W': w, 'pk': pk}
+
+
+def main_mmc(lamda, mu, c, n):
+    print("Type of the queuing model related to the system is M|M|C")
+    results = mmc(lamda, mu, c, n)
+    print(f"Probability that the system is empty (p0): {results['p0']}")
+    print(f"Probability that all servers are busy (pn): {results['pk']}")
+    print(f"Average number of customers in the queue (Lq): {results['Lq']}")
+    print(f"Average number of customers in the system (L): {results['L']}")
+    print(f"Average time a customer spends waiting in the queue (Wq): {results['Wq']:.2f} minutes")
+    print(f"Average time a customer spends in the system (W): {results['W']:.2f} minutes")
+    print("Service rate (mu):")
+    print(mu)
+    print("Arrival  rate (Lamda): ")
+    print(lamda)
+
+
+def mm1(lamda, mu, n):
+    rho = lamda / mu
+    if rho >= 1:
+        return {'p0': -1, 'pc': -1, 'Lq': -1, 'L': -1, 'Wq': -1, 'W': -1}
+    p0 = 1 - rho
+    pn = (1 - rho) * (rho ** n)
+    Lq = lamda ** 2 / (mu * (mu - lamda))
+    L = lamda / (mu - lamda)
+    Wq = lamda / (mu * (mu - lamda))
+    W = 1 / (mu - lamda)
+    return {'p0': p0, 'Lq': Lq, 'L': L, 'Wq': Wq, 'W': W, 'pn': pn}
+
+
+def main_mm1(lamda, mu, n):
+    print("Type of the queuing model related to the system is M|M|1")
+    results = mm1(lamda, mu, n)
+    print(f"Probability that the system is empty (p0):{results['p0']}")
+    print(f"Average number of customers in the queue (Lq): {results['Lq']}")
+    print(f"Average number of customers in the system (L):  {results['L']}")
+    print(f"Average time a customer spends waiting in the queue (Wq): {results['Wq']:.2f} minutes")
+    print(f"Average time a customer spends in the system (W):  {results['W']:.2f} minutes")
+    print("Service rate (mu):")
+    print(mu)
+    print("Arrival  rate (Lamda): ")
+    print(lamda)
+
+
+def mmINF(lamda, mu, n):
+    r = lamda / mu
+    if r >= 1:
+        return {'p0': -1, 'Lq': -1, 'L': -1, 'Wq': -1, 'W': -1, 'pk': -1, 'Utilization': -1}
+    p0 = math.e ** (-1 * r)
+    pn = ((r ** n) * (math.e ** (-1 * r))) / math.factorial(n)
+    l = lamda / mu
+    w = 1 / mu
+    Utilization = lamda / mu
+    lq = 0
+    wq = 0
+    return {'p0': p0, 'Lq': lq, 'L': l, 'Wq': wq, 'W': w, 'pk': pn, 'Utilization': Utilization}
+
+
+def main_mmINF(lamda, mu, n):
+    results = mmINF(lamda, mu, n)
+    print(f"Probability that the system is empty (p0): {results['p0']}")
+    print(f"Average number of customers in the queue (Lq): {results['Lq']}")
+    print(f"Average number of customers in the system (L):  {results['L']}")
+    print(f"Average time a customer spends waiting in the queue (Wq): {results['Wq']:.2f} minutes")
+    print(f"Average time a customer spends in the system (W):  {results['W']:.2f} minutes")
+    print(f"Utilization in the system (P): {results['Utilization']:.2f}")
+    print("Service rate (mu):")
+    print(mu)
+    print("Arrival  rate (Lamda): ")
+    print(lamda)
+
+
+def mm1k(lamda, mu, k):
+    rho = lamda / mu
+    if rho >= 1:
+        return {'p0': -1, 'Lq': -1, 'L': -1, 'Wq': -1, 'W': -1, 'pk': -1}
+    p0 = (1 - rho) / (1 - (rho ** (k + 1)))
+    pk = p0 * (rho ** k)
+    l = (rho * (1 - ((k + 1) * (rho ** k) + (k * (rho ** (k + 1)))))) / (1 - (rho ** (k + 1)) * (1 - rho))
+    lq = l - (1 - p0)
+    w = l / (lamda * (1 - pk))
+    wq = w - (1 / mu)
+    return {'p0': p0, 'Lq': lq, 'L': l, 'Wq': wq, 'W': w, 'pk': pk}
+
+
+def main_mm1k(lamda, mu, k):
+    print("Type of the queuing model related to the system is M|M|K")
+    results = mm1k(lamda, mu, k)
+    print(f"Probability that the system is empty (p0): {results['p0']}")
+    print(f"Average number of customers in the queue (Lq): {results['Lq']}")
+    print(f"Average number of customers in the system (L): {results['L']}")
+    print(f"Average time a customer spends waiting in the queue (Wq):  {results['Wq']:.2f} minutes")
+    print(f"Average time a customer spends in the system (W): {results['W']:.2f} minutes")
+    print("Service rate (mu):", mu)
+    print("Arrival  rate (Lamda): ", lamda)
+
+
+def bonus(C):
+    IAT = list()
+    ST = list()
+    for i in range(C):
+        IAT.append(random.uniform(0, 5))
+    for i in range(C):
+        ST.append(random.normal(2, 0.5))
+    AT = list()
+    SST = list()
+    WT = list()
+    CT = list()
+    TimeInSystem = list()
+    ProbabilityOfWait = 0
+    server = list()
+    for i in range(C):
+        if i == 0:
+            AT.append(IAT[i])
+            SST.append(AT[i])
+            WT.append(0)
+            CT.append(SST[i] + ST[i])
+            TimeInSystem.append(CT[i] - AT[i])
+            server.append(CT[i])
+
+        else:
+            AT.append(AT[i - 1] + IAT[i])
+            SST.append((max(AT[i], server[i - 1])))
+            WT.append(SST[i] - AT[i])
+            CT.append(SST[i] + ST[i])
+            server.append(CT[i])
+            if WT[i] > 0:
+                ProbabilityOfWait += 1
+        TimeInSystem.append(CT[i] - AT[i])
+    print(f"Probability that the system is empty (p0): {len([i for i in WT if i == 0]) / C:.2f}")
+    print(
+        f"Average time a customer spends waiting in the queue (Wq):  {sum(WT) / len([i for i in WT if i > 0]):.2f} minutes")
+    print(f"Average time a customer spends in the system (W): {sum(server) / C:.2f} minutes")
+    print(f"Probability Of Waiting: {(ProbabilityOfWait / C):.2f} ")
+
+    myTable = PrettyTable(["IAT", "AT", "SST", "WT", "ST", "CT", "TIS", "ServerT"])
+    for i in range(C):
+        myTable.add_row([IAT[i], AT[i], SST[i], WT[i], ST[i], CT[i], TimeInSystem[i], server[i]])
+    print(myTable)
+
+
+while True:
+    choose = int(input("Hello^_^, \nFor main assignment choose-> 1\nFor bonus assignment choose-> 2 \n"))
+    if choose == 1:
+        arrival_rate = float(input("Enter arrival rate: "))
+        service_rate = float(input("Enter service rate: "))
+        num_servers = get_int_or_inf(input("Enter number of servers: "))
+        system_capacity = get_int_or_inf(input("Enter system capacity: "))
+        population_size = get_int_or_inf(input("Enter population size: "))
+        system_discipline = input("Enter system discipline (FIFO/LIFO): ")
+        system_Name = int(input("Enter system Name\n1- M/M/C.\n2- M/M/1.\n3- M/M/1/K.\n4- M/M/infinity.\n"))
+        if system_Name == 1:
+            mmc(arrival_rate, service_rate, num_servers, population_size)
+            main_mmc(arrival_rate, service_rate, num_servers, population_size)
+        elif system_Name == 2:
+            mm1(arrival_rate, service_rate, population_size)
+            main_mm1(arrival_rate, service_rate, population_size)
+        elif system_Name == 3:
+            mm1k(arrival_rate, service_rate, num_servers)
+            main_mm1k(arrival_rate, service_rate, num_servers)
+        else:
+            mmINF(arrival_rate, service_rate, population_size)
+            main_mmINF(arrival_rate, service_rate, population_size)
+    else:
+        Customers = int(input("Enter population size: "))
+        bonus(Customers)
+    x = input("if you want to continue enter anything except 0 ?\n")
+    if x == "0":
+        print("The programme has been finished!")
+        break
